@@ -422,3 +422,8 @@ Mod/WindowsDouble.bat
 1.6/Assemblies
 /Server
 /Temp
+
+# Local-only developer scaffolding — never push to the public fork.
+.claude/
+CLAUDE.md
+
