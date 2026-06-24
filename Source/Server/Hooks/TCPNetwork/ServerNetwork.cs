@@ -22,13 +22,18 @@ namespace GameServer.Hooks.TCPNetwork
             method.Invoke(PM_Base.PacketDictionary[header][0], new object[] { client, buffer, header });
         };
 
-        private static Action<ServerClient> OnDisconnect { get; set; } = delegate (ServerClient client) 
+        private static Action<ServerClient> OnDisconnect { get; set; } = delegate (ServerClient client)
         {
             try
             {
                 Network.ServerClients.Remove(client, out _);
                 InformationDisplayer.DisplayDisconnect(client);
-                if (Master.ChatConfig.DisconnectNotifications) PM_Chat.BroadcastServerNotification($"{client.GetData<FL_Player>().Username} has left the server!");
+
+                FL_Player player = client.GetData<FL_Player>();
+                if (player != null && Master.ChatConfig.DisconnectNotifications)
+                {
+                    PM_Chat.BroadcastServerNotification($"{player.Username} has left the server!");
+                }
 
                 UserManager.SendPlayerRecount();
             }

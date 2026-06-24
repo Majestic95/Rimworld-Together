@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<!--
+		Dependency-resolution project for the Workshop mod folder.
+
+		This project does NOT contain real source code. Its only job is to make
+		`dotnet build` pull the net472-targeted dependency DLLs that the
+		upstream-provided RTClient.dll needs at runtime (MessagePack,
+		Newtonsoft.Json, DiscordRichPresence, plus their transitive deps) into
+		1.6/Assemblies/ — the Workshop install layout.
+
+		Package versions mirror upstream Source/Server/GameServer.csproj where
+		applicable, so the dep DLLs we ship match what upstream's RTClient.dll
+		was compiled against.
+
+		Build-Release.ps1's Invoke-Build runs this first, then copies the three
+		RT*.dll on top, then deletes the empty ClientDeps.dll from staging.
+	-->
+	<PropertyGroup>
+		<TargetFramework>net472</TargetFramework>
+		<RootNamespace>ClientDeps</RootNamespace>
+		<Nullable>disable</Nullable>
+		<OutputPath>..\..\1.6\Assemblies</OutputPath>
+		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+		<AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+		<AppendConfigurationToOutputPath>false</AppendConfigurationToOutputPath>
+		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+		<GenerateDocumentationFile>false</GenerateDocumentationFile>
+		<DebugType>none</DebugType>
+		<DebugSymbols>false</DebugSymbols>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="DiscordRichPresence" Version="1.6.1.70" />
+		<PackageReference Include="Lib.Harmony" Version="2.4.2">
+			<!-- RimWorld ships Harmony itself; don't shadow it from our mod folder. -->
+			<ExcludeAssets>runtime</ExcludeAssets>
+		</PackageReference>
+		<PackageReference Include="MessagePack" Version="3.1.7" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+	</ItemGroup>
+</Project>

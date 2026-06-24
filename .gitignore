@@ -413,3 +413,14 @@ Source/.vscode/*.*
 # Rimworld specific exclusions
 1.5/Assemblies
 1.6/Assemblies
+
+# MP release pipeline build artifacts
+/dist/
+
+# Allow the MP release pipeline scripts (defeats the [Rr]elease/ build-output pattern)
+!Scripts/Release/
+!Scripts/Release/**
+
+# Local-only developer scaffolding — never push to the public fork.
+.claude/
+CLAUDE.md
