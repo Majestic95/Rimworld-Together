@@ -27,14 +27,14 @@ namespace GameClient.PacketManagers.Synchronous
             PKT_Synchronous packet = new PKT_Synchronous();
             packet.CurrentStepMode = PKT_Synchronous.StepMode.Action;
             packet.CurrentActionType = PKT_Synchronous.ActionType.SPlayerMentalState;
-            packet.Contents = Serializer.ConvertObjectToBytes(playerMentalState, false);
+            packet.Contents = Serializer.ConvertObjectToBytes(playerMentalState, SynchronousOptions.CompressContents);
 
             Network.ServerEndpoint.EnqueuePacket(PacketHeader.Synchronous, packet);
         }
 
         public static void Handle(ServerClient client, PKT_Synchronous data)
         {
-            PlayerMentalState mentalState = Serializer.ConvertBytesToObject<PlayerMentalState>(data.Contents, false);
+            PlayerMentalState mentalState = Serializer.ConvertBytesToObject<PlayerMentalState>(data.Contents, SynchronousOptions.CompressContents);
 
             PatchHandler.ExecuteInBypass(delegate
             {

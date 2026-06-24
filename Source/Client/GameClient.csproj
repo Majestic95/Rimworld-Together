@@ -34,7 +34,7 @@
 		<PackageReference Include="Lib.Harmony" Version="2.4.2">
 			<ExcludeAssets>runtime</ExcludeAssets>
 		</PackageReference>
-		<PackageReference Include="MessagePack" Version="3.1.4" />
+		<PackageReference Include="MessagePack" Version="3.1.7" />
 	</ItemGroup>
 
 	<ItemGroup>

@@ -20,14 +20,14 @@ namespace GameClient.PacketManagers.Synchronous
             PKT_Synchronous packet = new PKT_Synchronous();
             packet.CurrentStepMode = PKT_Synchronous.StepMode.Action;
             packet.CurrentActionType = PKT_Synchronous.ActionType.SPlayerWeather;
-            packet.Contents = Serializer.ConvertObjectToBytes(weather, false);
+            packet.Contents = Serializer.ConvertObjectToBytes(weather, SynchronousOptions.CompressContents);
 
             Network.ServerEndpoint.EnqueuePacket(PacketHeader.Synchronous, packet);
         }
 
         public static void Handle(ServerClient client, PKT_Synchronous data)
         {
-            PlayerWeather weather = Serializer.ConvertBytesToObject<PlayerWeather>(data.Contents, false);
+            PlayerWeather weather = Serializer.ConvertBytesToObject<PlayerWeather>(data.Contents, SynchronousOptions.CompressContents);
 
             PatchHandler.ExecuteInBypass(delegate
             {

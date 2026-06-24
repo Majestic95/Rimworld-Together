@@ -114,7 +114,13 @@ namespace GameClient.PacketManagers.Synchronous
                 _.FromTile = data.ToTile;
                 _.ToTile = data.FromTile;
                 _.Party = GetPawnParty(SynchronousSide.Host);
-                _.Contents = Serializer.ConvertObjectToBytes(MapSaveLoader.MapToString(SessionHandler.SynchronousMap), false);
+
+                var __mapSw = System.Diagnostics.Stopwatch.StartNew();
+                var __flMap = MapSaveLoader.MapToString(SessionHandler.SynchronousMap);
+                __mapSw.Stop();
+                VisitMetrics.LogMapToString(__mapSw.ElapsedMilliseconds);
+                _.Contents = Serializer.ConvertObjectToBytes(__flMap, SynchronousOptions.CompressContents);
+                VisitMetrics.LogAcceptContentsSize(_.Contents.Length, SynchronousOptions.CompressContents);
 
                 SpawnOtherPawns(SynchronousSide.Host, data);
 
@@ -194,7 +200,16 @@ namespace GameClient.PacketManagers.Synchronous
             if (side == SynchronousSide.Host) SessionHandler.SynchronousMap = Find.AnyPlayerHomeMap;
             else
             {
-                SessionHandler.SynchronousMap = MapSaveLoader.StringToMap(Serializer.ConvertBytesToObject<FL_Map>(data.Contents, false), true);
+                VisitMetrics.LogReceiveAcceptContents(data.Contents.Length, SynchronousOptions.CompressContents);
+                var __dSw = System.Diagnostics.Stopwatch.StartNew();
+                FL_Map __flMap = Serializer.ConvertBytesToObject<FL_Map>(data.Contents, SynchronousOptions.CompressContents);
+                __dSw.Stop();
+                VisitMetrics.LogDeserializeFlMap(__dSw.ElapsedMilliseconds);
+
+                var __sSw = System.Diagnostics.Stopwatch.StartNew();
+                SessionHandler.SynchronousMap = MapSaveLoader.StringToMap(__flMap, true);
+                __sSw.Stop();
+                VisitMetrics.LogStringToMap(__sSw.ElapsedMilliseconds);
 
                 foreach (Pawn pawn in SessionHandler.SynchronousMap.mapPawns.AllPawns.Where(fetch => fetch.Faction == Faction.OfPlayer))
                 {

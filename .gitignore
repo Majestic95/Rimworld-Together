@@ -423,6 +423,13 @@ Mod/WindowsDouble.bat
 /Server
 /Temp
 
+# MP release pipeline build artifacts
+/dist/
+
+# Allow the MP release pipeline scripts (defeats the [Rr]elease/ build-output pattern)
+!Scripts/Release/
+!Scripts/Release/**
+
 # Local-only developer scaffolding — never push to the public fork.
 .claude/
 CLAUDE.md

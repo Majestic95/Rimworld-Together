@@ -26,7 +26,7 @@ namespace GameClient.PacketManagers.Synchronous
                 PKT_Synchronous packet = new PKT_Synchronous();
                 packet.CurrentStepMode = PKT_Synchronous.StepMode.Action;
                 packet.CurrentActionType = PKT_Synchronous.ActionType.SPlayerDraft;
-                packet.Contents = Serializer.ConvertObjectToBytes(PlayerDrafts, false);
+                packet.Contents = Serializer.ConvertObjectToBytes(PlayerDrafts, SynchronousOptions.CompressContents);
 
                 Network.ServerEndpoint.EnqueuePacket(PacketHeader.Synchronous, packet);
 
@@ -46,7 +46,7 @@ namespace GameClient.PacketManagers.Synchronous
 
         public static void Handle(ServerClient client, PKT_Synchronous data)
         {
-            PlayerDraft[] drafts = Serializer.ConvertBytesToObject<PlayerDraft[]>(data.Contents, false);
+            PlayerDraft[] drafts = Serializer.ConvertBytesToObject<PlayerDraft[]>(data.Contents, SynchronousOptions.CompressContents);
 
             PatchHandler.ExecuteInBypass(delegate
             {

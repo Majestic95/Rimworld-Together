@@ -19,14 +19,14 @@ namespace GameClient.PacketManagers.Synchronous
             PKT_Synchronous packet = new PKT_Synchronous();
             packet.CurrentStepMode = PKT_Synchronous.StepMode.Action;
             packet.CurrentActionType = PKT_Synchronous.ActionType.SPlayerDestroy;
-            packet.Contents = Serializer.ConvertObjectToBytes(destroy, false);
+            packet.Contents = Serializer.ConvertObjectToBytes(destroy, SynchronousOptions.CompressContents);
 
             Network.ServerEndpoint.EnqueuePacket(PacketHeader.Synchronous, packet);
         }
 
         public static void Handle(ServerClient client, PKT_Synchronous data)
         {
-            PlayerDestroy destroy = Serializer.ConvertBytesToObject<PlayerDestroy>(data.Contents, false);
+            PlayerDestroy destroy = Serializer.ConvertBytesToObject<PlayerDestroy>(data.Contents, SynchronousOptions.CompressContents);
 
             PatchHandler.ExecuteInBypass(delegate
             {

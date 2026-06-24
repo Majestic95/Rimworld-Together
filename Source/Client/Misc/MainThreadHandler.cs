@@ -93,14 +93,18 @@ namespace GameClient.Misc
             {
                 while (ActionQueue.Count > 0)
                 {
-                    ActionQueue.Dequeue().Invoke();
+                    Action queued = ActionQueue.Dequeue();
+                    try { queued.Invoke(); }
+                    catch (Exception e) { Printer.Error($"MainThreadHandler dispatch failed: {e}"); }
                 }
             }
         }
 
         IEnumerator ActionWrapper(Action action)
         {
-            action();
+            // Per-action try/catch — a thrown packet handler must not tear down the connection.
+            try { action(); }
+            catch (Exception e) { Printer.Error($"MainThreadHandler queued action failed: {e}"); }
             yield return null;
         }
     }

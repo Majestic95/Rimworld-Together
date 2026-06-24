@@ -40,8 +40,9 @@ namespace GameClient.PacketManagers.Synchronous
                     PKT_Synchronous packet = new PKT_Synchronous();
                     packet.CurrentStepMode = PKT_Synchronous.StepMode.Action;
                     packet.CurrentActionType = PKT_Synchronous.ActionType.SPlayerJob;
-                    packet.Contents = Serializer.ConvertObjectToBytes(PlayerJobs, false);
+                    packet.Contents = Serializer.ConvertObjectToBytes(PlayerJobs, SynchronousOptions.CompressContents);
 
+                    VisitMetrics.OnJobFlush(PlayerJobs.Count, packet.Contents.Length);
                     Network.ServerEndpoint.EnqueuePacket(PacketHeader.Synchronous, packet);
 
                     PlayerJobs.Clear();
@@ -68,6 +69,7 @@ namespace GameClient.PacketManagers.Synchronous
                 newJob.Job = ScribeManager.SerializeToString(job, ScribeManager.SerializableType.Other);
 
                 PlayerJobs.Add(newJob);
+                VisitMetrics.OnJobAsk(pawn.ThingID);
 
                 PatchHandler.ExecuteInBypass(delegate
                 {
@@ -79,7 +81,7 @@ namespace GameClient.PacketManagers.Synchronous
         }
         public static void Handle(ServerClient client, PKT_Synchronous data)
         {
-            PlayerJob[] jobs = Serializer.ConvertBytesToObject<PlayerJob[]>(data.Contents, false);
+            PlayerJob[] jobs = Serializer.ConvertBytesToObject<PlayerJob[]>(data.Contents, SynchronousOptions.CompressContents);
 
             PatchHandler.ExecuteInBypass(delegate
             {
@@ -87,6 +89,7 @@ namespace GameClient.PacketManagers.Synchronous
                 {
                     try
                     {
+                        VisitMetrics.OnJobHandle(playerJob.PawnID);
                         Job newJob = ScribeManager.SerializeFromString<Job>(playerJob.Job);
                         newJob = TypeConverter.PlayerJobToJob(newJob, playerJob);
 

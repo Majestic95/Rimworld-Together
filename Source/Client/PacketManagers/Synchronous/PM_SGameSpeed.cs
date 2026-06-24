@@ -25,7 +25,7 @@ namespace GameClient.PacketManagers.Synchronous
                 PKT_Synchronous packet = new PKT_Synchronous();
                 packet.CurrentStepMode = PKT_Synchronous.StepMode.Action;
                 packet.CurrentActionType = PKT_Synchronous.ActionType.SPlayerGameSpeed;
-                packet.Contents = Serializer.ConvertObjectToBytes(data, false);
+                packet.Contents = Serializer.ConvertObjectToBytes(data, SynchronousOptions.CompressContents);
 
                 Network.ServerEndpoint.EnqueuePacket(PacketHeader.Synchronous, packet);
             }
@@ -43,7 +43,7 @@ namespace GameClient.PacketManagers.Synchronous
                 PKT_Synchronous packet = new PKT_Synchronous();
                 packet.CurrentStepMode = PKT_Synchronous.StepMode.Action;
                 packet.CurrentActionType = PKT_Synchronous.ActionType.SPlayerGameSpeed;
-                packet.Contents = Serializer.ConvertObjectToBytes(data, false);
+                packet.Contents = Serializer.ConvertObjectToBytes(data, SynchronousOptions.CompressContents);
 
                 Network.ServerEndpoint.EnqueuePacket(PacketHeader.Synchronous, packet);
             }
@@ -51,7 +51,7 @@ namespace GameClient.PacketManagers.Synchronous
 
         public static void Handle(ServerClient client, PKT_Synchronous data)
         {
-            PlayerGameSpeed gameSpeed = Serializer.ConvertBytesToObject<PlayerGameSpeed>(data.Contents);
+            PlayerGameSpeed gameSpeed = Serializer.ConvertBytesToObject<PlayerGameSpeed>(data.Contents, SynchronousOptions.CompressContents);
 
             PatchHandler.ExecuteInBypass(delegate
             {

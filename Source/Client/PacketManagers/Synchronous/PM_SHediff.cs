@@ -27,14 +27,14 @@ namespace GameClient.PacketManagers.Synchronous
             PKT_Synchronous packet = new PKT_Synchronous();
             packet.CurrentStepMode = PKT_Synchronous.StepMode.Action;
             packet.CurrentActionType = PKT_Synchronous.ActionType.SPlayerHediff;
-            packet.Contents = Serializer.ConvertObjectToBytes(playerHediff, false);
+            packet.Contents = Serializer.ConvertObjectToBytes(playerHediff, SynchronousOptions.CompressContents);
 
             Network.ServerEndpoint.EnqueuePacket(PacketHeader.Synchronous, packet);
         }
 
         public static void Handle(ServerClient client, PKT_Synchronous data)
         {
-            PlayerHediff playerHediff = Serializer.ConvertBytesToObject<PlayerHediff>(data.Contents, false);
+            PlayerHediff playerHediff = Serializer.ConvertBytesToObject<PlayerHediff>(data.Contents, SynchronousOptions.CompressContents);
 
             PatchHandler.ExecuteInBypass(delegate
             {
