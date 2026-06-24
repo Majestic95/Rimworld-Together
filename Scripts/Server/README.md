@@ -13,14 +13,16 @@ don't run one themselves.
 
 ## One-time setup
 
-Nothing — the script works in place. You can run it from the repo location:
+Nothing — the script works in place. Run it from the repo location:
 
 ```cmd
 Scripts\Server\UpdateServer.bat
 ```
 
-Or copy `UpdateServer.bat` + `Update-Server.ps1` somewhere convenient (Desktop,
-taskbar shortcut). **Both files must live in the same folder.**
+For convenience, create a **shortcut** (right-click the `.bat` -> "Create
+shortcut") and put the shortcut on your Desktop or taskbar. Don't copy the
+files themselves out of the repo — the script derives the repo root from
+its own location and won't find `Source/Server/GameServer.csproj` if moved.
 
 ## Each time you want to ship a server change
 
@@ -47,9 +49,11 @@ taskbar shortcut). **Both files must live in the same folder.**
   `Source/Server/bin/Release/net8.0/win-x64/publish/GameServer.exe`.
 - Backs up the current install as `GameServer.exe.bak-YYYYMMDD-HHMMSS`.
 - Copies the freshly built EXE into the install location.
-- Keeps the last 3 timestamped backups. Older `.bak-*` files are auto-pruned.
-- Backups with other suffixes (e.g. `.workshop-backup`, `.preWipe-*`) are
-  **never touched** — only timestamped `.bak-*` files are auto-managed.
+- Keeps the last 3 timestamped backups. Older `.bak-YYYYMMDD-HHMMSS` files
+  are auto-pruned.
+- Any file in the install folder whose name doesn't match
+  `GameServer.exe.bak-YYYYMMDD-HHMMSS` is **never touched** by this script.
+  If you maintain manual backups under other names, they're safe.
 
 ## Flags
 
@@ -88,8 +92,7 @@ version Y, RT's version handshake fails closed with a "Server needs updating"
 message. The script does NOT enforce this — match versions manually:
 
 - After running this script, your server is on whatever
-  `Source/Assemblies/RTShared.dll` reports in the current repo state
-  (currently `26.6.23.1`).
+  `Source/Assemblies/RTShared.dll` reports in the current repo state.
 - Friends' clients must match. Push a new `mp-*` release; friends run
   `UpdateRTMP.bat` to pick it up.
 

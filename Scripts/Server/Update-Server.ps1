@@ -13,7 +13,6 @@
 #   .\Update-Server.ps1                # build + swap + (optional) launch
 #   .\Update-Server.ps1 -NoBuild       # skip dotnet publish (use existing publish output)
 #   .\Update-Server.ps1 -Launch        # launch server console after swap
-#   .\Update-Server.ps1 -Force         # do not prompt when server is running (will refuse, never kill)
 #   .\Update-Server.ps1 -InstallDir X  # override install location
 #
 # Config (optional, JSON file next to this script):
@@ -23,7 +22,6 @@
 param(
     [switch]$NoBuild,
     [switch]$Launch,
-    [switch]$Force,
     [string]$InstallDir,
     [string]$ConfigPath
 )
@@ -69,20 +67,29 @@ function Get-InstallDir {
 # ---------- safety: is server running ----------
 function Assert-ServerStopped {
     param([string]$InstallExe)
-    # Match any GameServer.exe process whose path is our install location.
-    # If the user is running a server elsewhere we ignore it.
-    $procs = @()
-    try {
-        $procs = Get-Process -Name 'GameServer' -ErrorAction SilentlyContinue | Where-Object {
-            $_.Path -and ($_.Path -ieq $InstallExe)
-        }
-    } catch { }
-    if ($procs.Count -gt 0) {
-        $pidsList = ($procs | ForEach-Object Id) -join ', '
+    $allProcs = Get-Process -Name 'GameServer' -ErrorAction SilentlyContinue
+    if (-not $allProcs) { return }
+
+    # Partition by whether we can read the process's executable path.
+    # If we can't read it, the process may have been launched at higher
+    # privilege than this script — treat as ambiguous and refuse rather
+    # than risk overwriting a live install whose locks we'll then hit.
+    $unreadable = $allProcs | Where-Object { -not $_.Path }
+    $matched    = $allProcs | Where-Object { $_.Path -and ($_.Path -ieq $InstallExe) }
+
+    if ($matched.Count -gt 0) {
+        $pidsList = ($matched | ForEach-Object Id) -join ', '
         Write-Warn "Server is running at $InstallExe (PID(s): $pidsList)."
         Write-Warn "Stop it cleanly first: switch to the server console and type 'quit'."
         Write-Warn "(We never kill it for you - kill -9 risks corrupting in-flight saves.)"
         Fail "Server running; aborting before swap."
+    }
+    if ($unreadable.Count -gt 0) {
+        $pidsList = ($unreadable | ForEach-Object Id) -join ', '
+        Write-Warn "Found GameServer.exe process(es) we cannot inspect (PID(s): $pidsList)."
+        Write-Warn "This usually means it's running at higher privilege than this script."
+        Write-Warn "Stop the running server, OR re-run this updater elevated, so we can confirm it's not the install we're about to overwrite."
+        Fail "Ambiguous server process; aborting before swap."
     }
 }
 
@@ -128,8 +135,11 @@ function Invoke-Swap {
 
 function Remove-OldBackups {
     param([string]$Dir, [int]$Keep = $MaxBackups)
+    # Sort by LastWriteTime so manual renames don't break the keep-N logic.
+    # Filter is restricted to GameServer.exe.bak-* so backups with any other
+    # suffix (e.g. user-managed legacy backups) are not eligible for pruning.
     $backups = Get-ChildItem -Path $Dir -File -Filter $BackupPattern -ErrorAction SilentlyContinue `
-        | Sort-Object Name -Descending
+        | Sort-Object LastWriteTime -Descending
     if ($backups.Count -le $Keep) { return }
     $toDelete = $backups | Select-Object -Skip $Keep
     foreach ($b in $toDelete) {

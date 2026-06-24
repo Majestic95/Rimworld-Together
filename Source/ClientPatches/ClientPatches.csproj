@@ -1,0 +1,57 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<!--
+		Fork-local Harmony shim mod.
+
+		Compiled to 1.6/Assemblies/ClientPatches.dll. Loaded by RimWorld
+		alongside the upstream RTClient.dll. Its static constructor runs
+		Harmony patches against upstream RT types to restore safety guards
+		the fork previously shipped via direct source edits — guards that
+		were lost when the build pipeline switched to consuming upstream's
+		prebuilt RT*.dll in commit f135d10f.
+
+		Build order requirement: this project compile-time-references
+		RTClient.dll from 1.6/Assemblies/. Build-Release.ps1::Invoke-Build
+		first wipes 1.6/Assemblies/, then builds ClientDeps (pulls NuGet
+		deps), then copies upstream RT*.dll, THEN builds this project.
+		Standalone `dotnet build` from a fresh checkout will fail until
+		Invoke-Build has populated 1.6/Assemblies/ with RTClient.dll.
+	-->
+	<PropertyGroup>
+		<TargetFramework>net472</TargetFramework>
+		<RootNamespace>Majestic.RTMP.ClientPatches</RootNamespace>
+		<AssemblyName>ClientPatches</AssemblyName>
+		<Nullable>disable</Nullable>
+		<LangVersion>latest</LangVersion>
+		<OutputPath>..\..\1.6\Assemblies</OutputPath>
+		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+		<AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+		<AppendConfigurationToOutputPath>false</AppendConfigurationToOutputPath>
+		<GenerateDocumentationFile>false</GenerateDocumentationFile>
+		<!-- Embedded portable PDB so stack traces from our Log.Error in the
+		     patch class show file + line numbers. Adds ~10-20 KB; worth it
+		     for diagnosing the catch-all in MainThreadDispatcherSafetyPatch. -->
+		<DebugType>embedded</DebugType>
+		<DebugSymbols>true</DebugSymbols>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Krafs.Rimworld.Ref" Version="1.6.4633" />
+		<PackageReference Include="Lib.Harmony" Version="2.4.2">
+			<!-- RimWorld ships Harmony itself; don't shadow it from our mod folder. -->
+			<ExcludeAssets>runtime</ExcludeAssets>
+		</PackageReference>
+	</ItemGroup>
+
+	<ItemGroup>
+		<!--
+			Compile-time reference to the upstream RT client assembly that we
+			patch. HintPath points at the file Invoke-Build copies into place
+			before this project builds. We don't ship our own copy: RimWorld
+			loads the same RTClient.dll for both us and the RT mod.
+		-->
+		<Reference Include="RTClient">
+			<HintPath>..\..\1.6\Assemblies\RTClient.dll</HintPath>
+			<Private>False</Private>
+		</Reference>
+	</ItemGroup>
+</Project>

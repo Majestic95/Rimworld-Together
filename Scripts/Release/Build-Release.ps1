@@ -106,6 +106,18 @@ function Invoke-Build {
         Copy-Item -Path $src -Destination (Join-Path $assemblyDir $dll) -Force
         Write-Ok "Copied $dll from Source/Assemblies/"
     }
+
+    # Fork-local Harmony shim. Builds AFTER upstream RT*.dll is in place
+    # because ClientPatches.csproj compile-time-references RTClient.dll
+    # from 1.6/Assemblies/. Output is ClientPatches.dll in the same folder.
+    Write-Step 'Building ClientPatches (Harmony shim - restores dispatcher try/catch lost in f135d10f)'
+    & dotnet build (Join-Path $RepoRoot 'Source\ClientPatches\ClientPatches.csproj') -c Release --nologo -v minimal
+    if ($LASTEXITCODE -ne 0) { throw "ClientPatches build failed (exit $LASTEXITCODE)" }
+    $patchesDll = Join-Path $assemblyDir 'ClientPatches.dll'
+    if (-not (Test-Path $patchesDll)) {
+        throw "ClientPatches build succeeded but ClientPatches.dll was not produced at $patchesDll"
+    }
+    Write-Ok 'ClientPatches.dll built and dropped in 1.6/Assemblies/'
 }
 
 function New-Staging {
